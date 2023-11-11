@@ -14,7 +14,7 @@ from typing import Iterable
 import torch
 
 
-def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
+def train_one_epoch(model: torch.nn.Module, criterion,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
                     scheduler, 
                     device: torch.device, epoch: int, logger, writer):
@@ -33,24 +33,36 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         writer.add_scalar("Loss/train", loss_value, epoch)
 
 @torch.no_grad()
-def evaluate(model, criterion, data_loader, metric, device, epoch, logger, writer):
+def evaluate(model, criterion, data_loader, metrics, device, epoch, logger, writer):
     model.eval()
     model = model.to(device)
-    metric = metric.to(device)
+    eval_metrics = dict()
+    result_metrics = dict()
+    for k, v in metrics.items():
+        eval_metrics[k] = v.to(device)
+        result_metrics[k] = list()
 
     for idx, (inputs, targets) in enumerate(data_loader):
         inputs, targets = inputs.to(device), targets.to(device)
         outputs = model(inputs)
         losses = criterion(outputs, targets)
-        acc = metric(outputs, targets)
+        iou_value = eval_metrics["iou"](outputs, targets.type(torch.int32))
+        dice_value = eval_metrics["dice"](outputs.view(-1), targets.type(torch.int32).view(-1))
+        
+        result_metrics["iou"].append(iou_value)
+        result_metrics["dice"].append(dice_value)
         loss_value = losses.item()
         logger.info("loss: {}".format(loss_value))
         writer.add_scalar("Loss/eval", loss_value)
-        writer.add_scalar("acc", acc)
+        for k, v in result_metrics.items():
+            writer.add_scalar(k, v[-1])
 
-    acc = metric.compute() 
-    logger.info("Epoch: {} acc {}".format(epoch, acc))
-    return acc
+    epoch_eval_res = {}
+    for k, v in eval_metrics.items():
+        each_metric_res = v.compute()
+        logger.info("Epoch: {} {} {}".format(epoch, k, each_metric_res))
+        epoch_eval_res[k] = each_metric_res
+    return epoch_eval_res
 
 
 def do_train(
@@ -62,7 +74,7 @@ def do_train(
         optimizer,
         scheduler,
         loss_fn,
-        metric, 
+        metrics, 
         logger, 
         writer, 
         output_dir, 
@@ -70,20 +82,24 @@ def do_train(
     epochs = cfg.SOLVER.MAX_EPOCHS
     logger = logging.getLogger("template_model.train")
     logger.info("Start training")
-    best_acc = 0.0
+
+    best_result = {}
+    for k, v in metrics.items():
+        best_result[k] = 0.0
 
     for epoch in range(epochs):
         train_one_epoch(model, loss_fn, train_loader, optimizer, scheduler, device, epoch, logger, writer)
-        acc = evaluate(model, loss_fn, val_loader, metric, device, epoch, logger, writer)
-        if acc > best_acc:
-            best_acc = acc
-            best_model_path = join(output_dir, 'best_ckpt.pth')
-            logger.info("Save best model at epoch: {}".format(epoch))
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                }, best_model_path)
+        epoch_eval_res = evaluate(model, loss_fn, val_loader, metrics, device, epoch, logger, writer)
+        for k, v in epoch_eval_res.items():
+            if v > best_result[k]:
+                best_result[k] = v
+                best_model_path = join(output_dir, 'best_ckpt_{}.pth'.format(k))
+                logger.info("Save best model at epoch: {}".format(epoch))
+                torch.save({
+                    'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    }, best_model_path)
         latest_model_path = join(output_dir, 'latest_ckpt.pth')
         torch.save({
             'epoch': epoch,

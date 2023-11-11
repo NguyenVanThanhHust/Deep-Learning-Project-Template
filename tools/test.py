@@ -11,7 +11,6 @@ from os import mkdir
 
 import torch
 import torch.nn.functional as F
-import torchmetrics
 
 
 sys.path.append('.')
@@ -21,6 +20,7 @@ from engine.inference import evaluate
 from modeling import build_model
 from utils.logger import setup_logger
 
+from torchmetrics.classification import Dice, BinaryJaccardIndex
 
 def main():
     parser = argparse.ArgumentParser(description="PyTorch Template MNIST Inference")
@@ -57,11 +57,23 @@ def main():
 
     model = build_model(cfg)
     model.load_state_dict(torch.load(cfg.TEST.WEIGHT)["model_state_dict"])
-    val_loader = make_data_loader(cfg, is_train=False)
+    test_loader = make_data_loader(cfg, split="test")
 
-    metric = torchmetrics.classification.Accuracy(task="multiclass", num_classes=cfg.MODEL.NUM_CLASSES)
+    iou_metric = BinaryJaccardIndex(
+        threshold=0.5, 
+    )
+    dice_metric = Dice(
+        num_classes=1, 
+        threshold=0.5
+    )
 
-    evaluate(model, val_loader, metric, device, logger)
-
+    metrics = {
+        "iou": iou_metric, 
+        "dice": dice_metric
+    }
+    result = evaluate(model, test_loader, metrics, device)
+    for k, v in result:
+        print(k, v)
+        
 if __name__ == '__main__':
     main()

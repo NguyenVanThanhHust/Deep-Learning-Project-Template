@@ -3,10 +3,14 @@
 @author:  sherlock
 @contact: sherlockliao01@gmail.com
 """
+import torch.nn.functional as F
 
-from .example_model import ResNet18
-
+from .unet import UNet
+from .losses import Loss
 
 def build_model(cfg):
-    model = ResNet18(cfg.MODEL.NUM_CLASSES)
+    model = UNet(cfg.MODEL.NUM_CLASSES)
     return model
+
+def build_losses(cfg):
+    return Loss()

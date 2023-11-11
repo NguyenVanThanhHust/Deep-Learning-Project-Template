@@ -13,17 +13,27 @@ from typing import Iterable
 import torch
 
 @torch.no_grad()
-def evaluate(model, data_loader, metric, device, logger):
-    model = model.to(device)
-    metric = metric.to(device)
+def evaluate(model, data_loader, metrics, device):
     model.eval()
-    
-    with torch.no_grad():
-        for idx, (inputs, targets) in enumerate(data_loader):
-            inputs, targets = inputs.to(device), targets.to(device)
-            outputs = model(inputs)
-            accc = metric(outputs, targets)
+    model = model.to(device)
+    print("Device: ", device)
+    eval_metrics = dict()
+    result_metrics = dict()
+    for k, v in metrics.items():
+        eval_metrics[k] = v.to(device)
+        result_metrics[k] = list()
+
+    for idx, (inputs, targets) in enumerate(data_loader):
+        inputs, targets = inputs.to(device), targets.to(device)
+        outputs = model(inputs)
+        iou_value = eval_metrics["iou"](outputs, targets.type(torch.int32))
+        dice_value = eval_metrics["dice"](outputs.view(-1), targets.type(torch.int32).view(-1))
         
-    acc = metric.compute() 
-    logger.info("Acc {}".format(acc))
-    return acc
+        result_metrics["iou"].append(iou_value)
+        result_metrics["dice"].append(dice_value)
+
+    epoch_eval_res = {}
+    for k, v in eval_metrics.items():
+        each_metric_res = v.compute()
+        epoch_eval_res[k] = each_metric_res
+    return epoch_eval_res

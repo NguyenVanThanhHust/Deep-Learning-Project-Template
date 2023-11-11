@@ -6,8 +6,19 @@
 
 import math
 import random
+import torch
+from torch import Tensor
+from typing import Any
 
 
+class BinarizeMask(object):
+    def __init__(self) -> None:
+        return 
+        
+    def __call__(self, mask: Tensor) -> Tensor:
+        mask[mask!=0] = 1
+        return mask 
+    
 class RandomErasing(object):
     """ Randomly selects a rectangle region in an image and erases its pixels.
         'Random Erasing Data Augmentation' by Zhong et al.

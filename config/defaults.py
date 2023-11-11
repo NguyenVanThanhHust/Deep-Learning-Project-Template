@@ -18,26 +18,24 @@ _C = CN()
 
 _C.MODEL = CN()
 _C.MODEL.DEVICE = "cuda"
-_C.MODEL.NUM_CLASSES = 10
+_C.MODEL.NUM_CLASSES = 1
 
 # -----------------------------------------------------------------------------
 # INPUT
 # -----------------------------------------------------------------------------
 _C.INPUT = CN()
+# Dataset folder
+_C.INPUT_TRAIN_FOLDER = "../Datasets/crack_segmentation_dataset/train"
+_C.INPUT_VAL_FOLDER = "../Datasets/crack_segmentation_dataset/val"
+_C.INPUT_TEST_FOLDER = "../Datasets/crack_segmentation_dataset/test"
 # Size of the image during training
-_C.INPUT.SIZE_TRAIN = 32
+_C.INPUT.SIZE_TRAIN = (448, 448)
 # Size of the image during test
-_C.INPUT.SIZE_TEST = 32
-# Minimum scale for the image during training
-_C.INPUT.MIN_SCALE_TRAIN = 0.5
-# Maximum scale for the image during test
-_C.INPUT.MAX_SCALE_TRAIN = 1.2
-# Random probability for image horizontal flip
-_C.INPUT.PROB = 0.5
+_C.INPUT.SIZE_TEST = (448, 448)
+
+_C.INPUT.PIXEL_MEAN = [0.485, 0.456, 0.406]
 # Values to be used for image normalization
-_C.INPUT.PIXEL_MEAN = [0.1307, ]
-# Values to be used for image normalization
-_C.INPUT.PIXEL_STD = [0.3081, ]
+_C.INPUT.PIXEL_STD = [0.229, 0.224, 0.225]
 
 # -----------------------------------------------------------------------------
 # Dataset

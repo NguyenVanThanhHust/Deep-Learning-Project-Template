@@ -19,8 +19,9 @@ sys.path.append('.')
 from config import cfg
 from data import make_data_loader
 from engine.trainer import do_train
-from modeling import build_model
+from modeling import build_model, build_losses
 from solver import make_optimizer
+from torchmetrics.classification import Dice, BinaryJaccardIndex
 
 from utils.logger import setup_logger
 from torch.utils.tensorboard import SummaryWriter
@@ -32,12 +33,25 @@ def train(cfg, logger, output_dir):
     optimizer = make_optimizer(cfg, model)
     scheduler = None
 
-    train_loader = make_data_loader(cfg, is_train=True)
-    val_loader = make_data_loader(cfg, is_train=False)
+    train_loader = make_data_loader(cfg, split="train")
+    val_loader = make_data_loader(cfg, split="val")
 
     writer = SummaryWriter(output_dir)
 
-    metric = torchmetrics.classification.Accuracy(task="multiclass", num_classes=cfg.MODEL.NUM_CLASSES)
+    iou_metric = BinaryJaccardIndex(
+        threshold=0.5, 
+    )
+    dice_metric = Dice(
+        num_classes=1, 
+        threshold=0.5
+    )
+
+    metrics = {
+        "iou": iou_metric, 
+        "dice": dice_metric
+    }
+
+    losses = build_losses(cfg)
 
     do_train(
         cfg,
@@ -47,8 +61,8 @@ def train(cfg, logger, output_dir):
         device,
         optimizer,
         scheduler,
-        F.cross_entropy,
-        metric,
+        losses,
+        metrics,
         logger, 
         writer,
         output_dir

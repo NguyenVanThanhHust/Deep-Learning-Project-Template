@@ -6,25 +6,29 @@
 
 from torch.utils import data
 
-from .datasets.mnist import MNIST
+from .datasets.crack import CrackDataset
 from .transforms import build_transforms
 
 
-def build_dataset(transforms, is_train=True):
-    datasets = MNIST(root='./', train=is_train, transform=transforms, download=True)
+def build_dataset(data_folder, img_transforms, mask_transforms):
+    datasets = CrackDataset(data_folder=data_folder, img_transform=img_transforms, mask_transform=mask_transforms)
     return datasets
 
-
-def make_data_loader(cfg, is_train=True):
-    if is_train:
+def make_data_loader(cfg, split="train"):
+    if split=="train":
         batch_size = cfg.SOLVER.IMS_PER_BATCH
         shuffle = True
     else:
         batch_size = cfg.TEST.IMS_PER_BATCH
         shuffle = False
+    split_datafolders = {
+        "train": cfg.INPUT_TRAIN_FOLDER,
+        "val": cfg.INPUT_VAL_FOLDER,
+        "test": cfg.INPUT_TEST_FOLDER,
+    }
 
-    transforms = build_transforms(cfg, is_train)
-    datasets = build_dataset(transforms, is_train)
+    img_transforms, mask_transforms = build_transforms(cfg, split)
+    datasets = build_dataset(split_datafolders[split], img_transforms, mask_transforms)
 
     num_workers = cfg.DATALOADER.NUM_WORKERS
     data_loader = data.DataLoader(
