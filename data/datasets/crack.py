@@ -24,7 +24,6 @@ class CrackDataset(Dataset):
         self.mask_transform = mask_transform
 
     def __len__(self):
-        return 2
         return len(self.img_paths)
     
     def __getitem__(self, index):

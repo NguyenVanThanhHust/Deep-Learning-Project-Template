@@ -80,7 +80,7 @@ def do_train(
         output_dir, 
 ):
     epochs = cfg.SOLVER.MAX_EPOCHS
-    logger = logging.getLogger("template_model.train")
+    logger = logging.getLogger("simple_unet.train")
     logger.info("Start training")
 
     best_result = {}
