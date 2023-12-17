@@ -30,7 +30,7 @@ def train_one_epoch(model: torch.nn.Module, criterion,
         optimizer.zero_grad()
         losses.backward()
         optimizer.step()
-        logger.info("loss: {}".format(loss_value))
+        logger.info("Epoch: {}, loss: {}".format(epoch, loss_value))
         writer.add_scalar("Loss/train", loss_value, idx + epoch * dataset_size // inputs.size()[0])
 
 @torch.no_grad()
@@ -54,7 +54,7 @@ def evaluate(model, criterion, data_loader, metrics, device, epoch, logger, writ
         result_metrics["iou"].append(iou_value)
         result_metrics["dice"].append(dice_value)
         loss_value = losses.item()
-        logger.info("loss: {}".format(loss_value))
+        logger.info("Epoch: {}, loss: {}".format(epoch, loss_value))
         writer.add_scalar("Loss/eval", loss_value, idx + epoch * dataset_size // inputs.size()[0])
         for k, v in result_metrics.items():
             writer.add_scalar(k, v[-1], idx + epoch * dataset_size // inputs.size()[0])
