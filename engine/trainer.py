@@ -43,6 +43,7 @@ def evaluate(model, criterion, data_loader, metrics, device, epoch, logger, writ
         eval_metrics[k] = v.to(device)
         result_metrics[k] = list()
 
+    dataset_size = len(data_loader.dataset)
     for idx, (inputs, targets) in enumerate(data_loader):
         inputs, targets = inputs.to(device), targets.to(device)
         outputs = model(inputs)
