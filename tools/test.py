@@ -19,6 +19,7 @@ from data import make_data_loader
 from engine.inference import evaluate
 from modeling import build_model
 from utils.logger import setup_logger
+from torch.utils.tensorboard import SummaryWriter
 
 from torchmetrics.classification import Dice, BinaryJaccardIndex
 
@@ -71,7 +72,9 @@ def main():
         "iou": iou_metric, 
         "dice": dice_metric
     }
-    result = evaluate(model, test_loader, metrics, device)
+
+    writer = SummaryWriter(output_dir)
+    result = evaluate(model, test_loader, metrics, device, writer)
     for k, v in result:
         print(k, v)
         

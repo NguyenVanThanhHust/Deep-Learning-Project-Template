@@ -16,11 +16,12 @@ import torch
 
 def train_one_epoch(model: torch.nn.Module, criterion,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
-                    scheduler, 
+                    scheduler: torch.optim.lr_scheduler, 
                     device: torch.device, epoch: int, logger, writer):
     model.train()
     model = model.to(device)
 
+    dataset_size = len(data_loader.dataset)
     for idx, (inputs, targets) in enumerate(data_loader):
         inputs, targets = inputs.to(device), targets.to(device)
         outputs = model(inputs)
@@ -30,7 +31,7 @@ def train_one_epoch(model: torch.nn.Module, criterion,
         losses.backward()
         optimizer.step()
         logger.info("loss: {}".format(loss_value))
-        writer.add_scalar("Loss/train", loss_value, epoch)
+        writer.add_scalar("Loss/train", loss_value, idx + epoch * dataset_size // inputs.size()[0])
 
 @torch.no_grad()
 def evaluate(model, criterion, data_loader, metrics, device, epoch, logger, writer):
@@ -53,9 +54,9 @@ def evaluate(model, criterion, data_loader, metrics, device, epoch, logger, writ
         result_metrics["dice"].append(dice_value)
         loss_value = losses.item()
         logger.info("loss: {}".format(loss_value))
-        writer.add_scalar("Loss/eval", loss_value)
+        writer.add_scalar("Loss/eval", loss_value, idx + epoch * dataset_size // inputs.size()[0])
         for k, v in result_metrics.items():
-            writer.add_scalar(k, v[-1])
+            writer.add_scalar(k, v[-1], idx + epoch * dataset_size // inputs.size()[0])
 
     epoch_eval_res = {}
     for k, v in eval_metrics.items():

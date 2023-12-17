@@ -13,7 +13,7 @@ from typing import Iterable
 import torch
 
 @torch.no_grad()
-def evaluate(model, data_loader, metrics, device):
+def evaluate(model, data_loader, metrics, device, writer):
     model.eval()
     model = model.to(device)
     print("Device: ", device)
