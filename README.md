@@ -13,7 +13,7 @@ python scripts/split_train_val.py --data_folder ../Datasets/
 
 How to train
 ```
-python tools/train.py --config_file configs/simple_unet.yaml
+python tools/train.py --config_file configs/simple_unet.yaml PRETRAINED_CHECKPOINT if_you_have_pretrained_ckpt
 ```
 
 How to infer

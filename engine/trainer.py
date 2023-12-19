@@ -19,7 +19,7 @@ def train_one_epoch(model: torch.nn.Module, criterion,
                     scheduler: torch.optim.lr_scheduler, 
                     device: torch.device, epoch: int, logger, writer):
     model.train()
-    model = model.to(device)
+    model.to(device)
 
     dataset_size = len(data_loader.dataset)
     for idx, (inputs, targets) in enumerate(data_loader):
@@ -88,8 +88,11 @@ def do_train(
     best_result = {}
     for k, v in metrics.items():
         best_result[k] = 0.0
-
-    for epoch in range(epochs):
+    if cfg.PRETRAINED_CHECKPOINT is not None:
+        start_epoch = torch.load(cfg.PRETRAINED_CHECKPOINT)["epoch"]
+    else:
+        start_epoch = 0
+    for epoch in range(start_epoch, epochs):
         train_one_epoch(model, loss_fn, train_loader, optimizer, scheduler, device, epoch, logger, writer)
         epoch_eval_res = evaluate(model, loss_fn, val_loader, metrics, device, epoch, logger, writer)
         for k, v in epoch_eval_res.items():
@@ -100,11 +103,9 @@ def do_train(
                 torch.save({
                     'epoch': epoch,
                     'model_state_dict': model.state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict(),
                     }, best_model_path)
         latest_model_path = join(output_dir, 'latest_ckpt.pth')
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
             }, latest_model_path)
