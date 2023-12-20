@@ -18,7 +18,12 @@ python tools/train.py --config_file configs/simple_unet.yaml PRETRAINED_CHECKPOI
 
 How to infer
 ```
-python tools/test --config_file configs/simple_unet.yaml TEST.WEIGHT your_trained_weight_here
+python tools/test.py --config_file configs/simple_unet.yaml TEST.WEIGHT your_trained_weight_here
+```
+
+How to visualize prediction
+```
+python tools/viz_prediction.py --config_file configs/simple_unet.yaml --input_folder your_image_folder TEST.WEIGHT your_trained_weight_here
 ```
 
 # Acknowledgments
