@@ -88,7 +88,7 @@ def do_train(
     best_result = {}
     for k, v in metrics.items():
         best_result[k] = 0.0
-    if cfg.PRETRAINED_CHECKPOINT is not None:
+    if os.path.isfile(cfg.PRETRAINED_CHECKPOINT):
         start_epoch = torch.load(cfg.PRETRAINED_CHECKPOINT)["epoch"]
     else:
         start_epoch = 0
